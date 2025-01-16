@@ -78,9 +78,25 @@
     }
 
     .active-button {
-      background-color: #007bff;
+      background-color: #0056b3;
       color: white;
       border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .active-button:hover {
+      background-color: #004080;
+      transform: scale(1.05);
+    }
+
+    .active-button:active {
+      background-color: #003366;
+      transform: scale(0.95);
     }
 
     /* Responsive Table Container */
@@ -103,17 +119,22 @@
       .container {
         padding: 10px;
       }
+
+      .active-button {
+        font-size: 14px;
+        padding: 8px 15px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Popular Number Analyzer</h1>
-    <button id="btnLast10" onclick="analyzeZip('last10', 'btnLast10')">Analyze Last 10 Rows</button>
-    <button id="btnLast20" onclick="analyzeZip('last20', 'btnLast20')">Analyze Last 20 Rows</button>
-    <button id="btnLast30" onclick="analyzeZip('last30', 'btnLast30')">Analyze Last 30 Rows</button>
-    <button id="btnEstimate10" onclick="estimateNumbers(10, 'btnEstimate10')">Estimate 10 Numbers</button>
-    <button id="btnEstimate15" onclick="estimateNumbers(15, 'btnEstimate15')">Estimate 15 Numbers</button>
+    <button id="btnLast10" class="active-button" onclick="analyzeZip('last10', 'btnLast10')">Analyze Last 10 Rows</button>
+    <button id="btnLast20" class="active-button" onclick="analyzeZip('last20', 'btnLast20')">Analyze Last 20 Rows</button>
+    <button id="btnLast30" class="active-button" onclick="analyzeZip('last30', 'btnLast30')">Analyze Last 30 Rows</button>
+    <button id="btnLast50" class="active-button" onclick="analyzeZip('last50', 'btnLast50')">Analyze Last 50 Rows</button>
+    <button id="btnLast100" class="active-button" onclick="analyzeZip('last100', 'btnLast100')">Analyze Last 100 Rows</button>
     <h2 id="resultTitle">Results</h2>
     <div class="table-wrapper">
       <table id="results">
@@ -171,221 +192,154 @@
         <tbody></tbody>
       </table>
     </div>
-
-    <h2 id="estimateTitle" class="hidden">Estimate Numbers for Next Round</h2>
-    <div class="table-wrapper hidden" id="estimateWrapper">
-      <table id="estimateTable">
-        <thead>
-          <tr>
-            <th>Number</th>
-            <th>Probability (%)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
   </div>
 
   <script>
-    let lastNumberCounts = {};
+  // Centralized references and state
+  const state = {
+    lastNumberCounts: {},
+    elements: {
+      buttons: document.querySelectorAll("button"),
+      tables: {
+        results: document.getElementById("results"),
+        last20: document.getElementById("last20").getElementsByTagName("tbody")[0],
+        last10: document.getElementById("last10").getElementsByTagName("tbody")[0],
+      },
+      wrappers: {
+        last10: document.getElementById("last10TableWrapper"),
+        last20: document.getElementById("last20TableWrapper"),
+      },
+      titles: {
+        last10: document.getElementById("last10Title"),
+        last20: document.getElementById("last20Title"),
+        result: document.getElementById("resultTitle"),
+      },
+    },
+  };
 
-    function resetActiveButtons() {
-      const buttons = document.querySelectorAll("button");
-      buttons.forEach(button => button.classList.remove("active-button"));
-    }
+  const highlightClasses = [
+    "highlight-red", "highlight-orange", "highlight-yellow",
+    "highlight-green", "highlight-blue", "highlight-purple",
+    "highlight-pink", "highlight-cyan", "highlight-lime"
+  ];
 
-    function resetVisibility() {
-      const elementsToHide = [
-        document.getElementById("last20TableWrapper"),
-        document.getElementById("last10TableWrapper"),
-        document.getElementById("estimateWrapper"),
-        document.getElementById("last20Title"),
-        document.getElementById("last10Title"),
-        document.getElementById("estimateTitle")
-      ];
+  // Helper to reset UI visibility
+  function resetVisibility() {
+    Object.values(state.elements.wrappers).forEach(wrapper => wrapper.classList.add("hidden"));
+    Object.values(state.elements.titles).forEach(title => title.classList.add("hidden"));
+  }
 
-      elementsToHide.forEach(element => {
-        if (element) {
-          element.classList.add("hidden");
-        }
-      });
-    }
+  // Helper to reset active button styles
+  function resetActiveButtons() {
+    state.elements.buttons.forEach(button => button.classList.remove("active-button"));
+  }
 
-    async function analyzeZip(mode, buttonId) {
-      resetActiveButtons();
-      document.getElementById(buttonId).classList.add("active-button");
+  // Helper to create table rows dynamically
+  function createRow(cells, isHighlighted = false) {
+    const row = document.createElement("tr");
+    cells.forEach((cellData, index) => {
+      const cell = document.createElement("td");
+      cell.textContent = cellData;
 
-      const url = "https://cors-anywhere.herokuapp.com/https://www.sportstoto.com.my/upload/Toto658.zip";
-      const resultsTableNumberRow = document.getElementById("numberRow");
-      const resultsTableCountRow = document.getElementById("countRow");
-      const last20Table = document.getElementById("last20");
-      const last20TableBody = last20Table.getElementsByTagName("tbody")[0];
-      const last10Table = document.getElementById("last10");
-      const last10TableBody = last10Table.getElementsByTagName("tbody")[0];
-      const last20Title = document.getElementById("last20Title");
-      const last10Title = document.getElementById("last10Title");
-      const resultTitle = document.getElementById("resultTitle");
-
-      resetVisibility();
-      resultsTableNumberRow.innerHTML = "<td><b>Number</b></td>";
-      resultsTableCountRow.innerHTML = "<td><b>Count</b></td>";
-      last20TableBody.innerHTML = "";
-      last10TableBody.innerHTML = "";
-
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Failed to fetch the zip file.");
-
-        const blob = await response.blob();
-        const zip = await JSZip.loadAsync(blob);
-        let txtFileContent = null;
-
-        for (const fileName of Object.keys(zip.files)) {
-          if (fileName.endsWith(".txt")) {
-            txtFileContent = await zip.files[fileName].async("string");
-            break;
-          }
-        }
-
-        if (!txtFileContent) throw new Error("No .txt file found in the zip.");
-
-        const lines = txtFileContent.split("\n").filter(line => line.trim() !== "");
-        const numberCounts = {};
-        let rowsToProcess = lines;
-
-        if (mode === "last10") {
-          rowsToProcess = lines.slice(-10);
-          document.getElementById("last10TableWrapper").classList.remove("hidden");
-          last10Title.classList.remove("hidden");
-        } else if (mode === "last20") {
-          rowsToProcess = lines.slice(-20);
-          document.getElementById("last20TableWrapper").classList.remove("hidden");
-          last20Title.textContent = "Last 20 Rows Data";
-          last20Title.classList.remove("hidden");
-        } else if (mode === "last30") {
-          rowsToProcess = lines.slice(-30);
-          document.getElementById("last20TableWrapper").classList.remove("hidden");
-          last20Title.textContent = "Last 30 Rows Data";
-          last20Title.classList.remove("hidden");
-        }
-
-        const lastRow = lines[lines.length - 1].split(",");
-        const lastDate = lastRow[1] || "N/A";
-        const lastPrize = parseInt(lastRow[lastRow.length - 1]).toLocaleString() || "N/A";
-        resultTitle.textContent = `Results - Date: ${lastDate}, RM ${lastPrize}`;
-
-        rowsToProcess.forEach(line => {
-          const columns = line.split(",");
-          for (let i = 2; i <= 7; i++) {
-            const num = parseInt(columns[i], 10);
-            if (!isNaN(num)) {
-              numberCounts[num] = (numberCounts[num] || 0) + 1;
-            }
-          }
-        });
-
-        lastNumberCounts = numberCounts;
-
-        const sortedNumbers = Object.entries(numberCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 15);
-
-        const highlightClasses = [
-          "highlight-red", "highlight-orange", "highlight-yellow",
-          "highlight-green", "highlight-blue", "highlight-purple",
-          "highlight-pink", "highlight-cyan", "highlight-lime"
-        ];
-        const numberHighlights = {};
-
-        sortedNumbers.forEach(([num, count], index) => {
-          const numberCell = document.createElement("td");
-          const countCell = document.createElement("td");
-          numberCell.textContent = num;
-          countCell.textContent = count;
-
-          if (index < 9) {
-            const highlightClass = highlightClasses[index % highlightClasses.length];
-            numberCell.classList.add(highlightClass);
-            countCell.classList.add(highlightClass);
-            numberHighlights[num] = highlightClass;
-          }
-
-          resultsTableNumberRow.appendChild(numberCell);
-          resultsTableCountRow.appendChild(countCell);
-        });
-
-        rowsToProcess.forEach(line => {
-          const columns = line.split(",");
-          const date = columns[1] || "N/A";
-          const num1 = columns[2] || "N/A";
-          const num2 = columns[3] || "N/A";
-          const num3 = columns[4] || "N/A";
-          const num4 = columns[5] || "N/A";
-          const num5 = columns[6] || "N/A";
-          const num6 = columns[7] || "N/A";
-          const prize = columns[columns.length - 1] || "N/A";
-
-          const row = mode === "last10" ? last10TableBody.insertRow() : last20TableBody.insertRow();
-          row.insertCell(0).textContent = date;
-          [num1, num2, num3, num4, num5, num6].forEach((num, index) => {
-            const cell = row.insertCell(index + 1);
-            cell.textContent = num;
-            const normalizedNum = parseInt(num, 10).toString();
-            if (numberHighlights[normalizedNum]) {
-              cell.classList.add(numberHighlights[normalizedNum]);
-            }
-          });
-          row.insertCell(7).textContent = parseInt(prize).toLocaleString();
-        });
-      } catch (error) {
-        console.error(`Error: ${error.message}`);
+      if (isHighlighted && index > 0 && index < highlightClasses.length + 1) {
+        // Skip highlighting the first column (index > 0 ensures this)
+        cell.classList.add(highlightClasses[index - 1]);
       }
-    }
 
-    function estimateNumbers(count, buttonId) {
-      resetActiveButtons();
-      document.getElementById(buttonId).classList.add("active-button");
+      row.appendChild(cell);
+    });
+    return row;
+  }
 
-      resetVisibility();
+  // Highlight numbers with specific classes
+  function highlightNumbers(numbers) {
+    const uniqueColors = new Map();
+    let colorIndex = 0;
 
-      const estimateTitle = document.getElementById("estimateTitle");
-      const estimateWrapper = document.getElementById("estimateWrapper");
-      const estimateTableBody = document.getElementById("estimateTable").getElementsByTagName("tbody")[0];
-      estimateTableBody.innerHTML = "";
+    numbers.slice(0, 9).forEach(([num]) => { // Restrict to top 9 numbers
+      if (!uniqueColors.has(num)) {
+        uniqueColors.set(num, highlightClasses[colorIndex % highlightClasses.length]);
+        colorIndex++;
+      }
+    });
 
-      const totalOccurrences = Object.values(lastNumberCounts).reduce((a, b) => a + b, 0);
+    return uniqueColors;
+  }
 
-      const sortedEstimates = Object.entries(lastNumberCounts)
-        .map(([num, occurrences]) => [num, ((occurrences / totalOccurrences) * 100).toFixed(2)])
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, count);
+  // Process rows for number counting and table insertion
+  function processRows(rows, tableBody, numberHighlights) {
+    tableBody.innerHTML = ""; // Clear existing table rows
 
-      const highlightClasses = [
-        "highlight-red", "highlight-orange", "highlight-yellow",
-        "highlight-green", "highlight-blue", "highlight-purple",
-        "highlight-pink", "highlight-cyan", "highlight-lime"
-      ];
+    rows.forEach(line => {
+      const columns = line.split(",");
+      const date = columns[1] || "N/A";
+      const numbers = columns.slice(2, 8).map(num => num || "N/A");
+      const prize = parseInt(columns.at(-1)).toLocaleString() || "N/A";
 
-      sortedEstimates.forEach(([num, probability], index) => {
-        const row = estimateTableBody.insertRow();
-        const numberCell = row.insertCell(0);
-        const probabilityCell = row.insertCell(1);
-
-        numberCell.textContent = num;
-        probabilityCell.textContent = probability;
-
-        if (index < 9) {
-          const highlightClass = highlightClasses[index % highlightClasses.length];
-          numberCell.classList.add(highlightClass);
-          probabilityCell.classList.add(highlightClass);
+      // Create and populate row
+      const row = createRow([date, ...numbers, prize]);
+      numbers.forEach((num, i) => {
+        const normalizedNum = parseInt(num, 10).toString();
+        if (numberHighlights.has(normalizedNum)) {
+          row.cells[i + 1].classList.add(numberHighlights.get(normalizedNum));
         }
       });
 
-      estimateTitle.classList.remove("hidden");
-      estimateWrapper.classList.remove("hidden");
-    }
+      // Append row to the table body
+      tableBody.appendChild(row);
+    });
+  }
 
-    window.onload = () => analyzeZip("last10", "btnLast10");
-  </script>
+  // Fetch and analyze zip content
+  async function analyzeZip(mode, buttonId) {
+    resetActiveButtons();
+    document.getElementById(buttonId).classList.add("active-button");
+    resetVisibility();
+
+    try {
+      const response = await fetch("https://cors-anywhere.herokuapp.com/https://www.sportstoto.com.my/upload/Toto658.zip");
+      if (!response.ok) throw new Error("Failed to fetch the zip file.");
+
+      const zip = await JSZip.loadAsync(await response.blob());
+      const txtFile = Object.values(zip.files).find(file => file.name.endsWith(".txt"));
+      if (!txtFile) throw new Error("No .txt file found in the zip.");
+
+      const lines = (await txtFile.async("string")).split("\n").filter(line => line.trim() !== "");
+      const rowsToProcess = lines.slice(-{
+        last10: 10, last20: 20, last30: 30, last50: 50, last100: 100,
+      }[mode] || lines.length);
+
+      const numberCounts = {};
+      rowsToProcess.forEach(line => {
+        line.split(",").slice(2, 8).forEach(num => {
+          const parsedNum = parseInt(num, 10);
+          if (!isNaN(parsedNum)) numberCounts[parsedNum] = (numberCounts[parsedNum] || 0) + 1;
+        });
+      });
+
+      state.lastNumberCounts = numberCounts;
+      const sortedNumbers = Object.entries(numberCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+      const numberHighlights = highlightNumbers(sortedNumbers);
+
+      // Update Results Table
+      const resultsBody = state.elements.tables.results.tBodies[0];
+      resultsBody.innerHTML = "";
+      resultsBody.appendChild(createRow(["Number", ...sortedNumbers.map(([num]) => num)], true));
+      resultsBody.appendChild(createRow(["Count", ...sortedNumbers.map(([, count]) => count)], true));
+
+      // Update Last Rows Table
+      const targetTable = mode === "last10" ? state.elements.tables.last10 : state.elements.tables.last20;
+      const targetWrapper = mode === "last10" ? state.elements.wrappers.last10 : state.elements.wrappers.last20;
+      const targetTitle = mode === "last10" ? state.elements.titles.last10 : state.elements.titles.last20;
+      processRows(rowsToProcess, targetTable, numberHighlights);
+      targetWrapper.classList.remove("hidden");
+      targetTitle.classList.remove("hidden");
+    } catch (error) {
+      console.error(error.message);
+    }
+  }
+
+  window.onload = () => analyzeZip("last10", "btnLast10");
+</script>
 </body>
 </html>
