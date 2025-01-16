@@ -149,6 +149,7 @@
             <th>Num4</th>
             <th>Num5</th>
             <th>Num6</th>
+            <th>Prize</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -314,9 +315,7 @@
               cell.classList.add(numberHighlights[normalizedNum]);
             }
           });
-          if (mode !== "last10") {
-            row.insertCell(7).textContent = parseInt(prize).toLocaleString();
-          }
+          row.insertCell(7).textContent = parseInt(prize).toLocaleString();
         });
       } catch (error) {
         console.error(`Error: ${error.message}`);
