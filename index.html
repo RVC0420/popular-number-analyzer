@@ -135,6 +135,7 @@
     <button id="btnLast30" class="active-button" onclick="analyzeZip('last30', 'btnLast30')">Analyze Last 30 Rows</button>
     <button id="btnLast50" class="active-button" onclick="analyzeZip('last50', 'btnLast50')">Analyze Last 50 Rows</button>
     <button id="btnLast100" class="active-button" onclick="analyzeZip('last100', 'btnLast100')">Analyze Last 100 Rows</button>
+    <button id="btnNumberRange" class="active-button" onclick="checkNumberRange()">Check Number Range</button>
     <h2 id="resultTitle">Results</h2>
     <div class="table-wrapper">
       <table id="results">
@@ -192,6 +193,25 @@
         <tbody></tbody>
       </table>
     </div>
+
+    <h2 id="numberRangeTitle" class="hidden">Number Range Analysis</h2>
+    <div id="numberRangeTableWrapper" class="table-wrapper hidden">
+      <table id="numberRange">
+        <thead>
+          <tr>
+            <th>Number Range</th>
+            <th>Total Count</th>
+            <th>1st Most Frequent</th>
+            <th>Count</th>
+            <th>2nd Most Frequent</th>
+            <th>Count</th>
+            <th>3rd Most Frequent</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
@@ -204,14 +224,17 @@
         results: document.getElementById("results"),
         last20: document.getElementById("last20").getElementsByTagName("tbody")[0],
         last10: document.getElementById("last10").getElementsByTagName("tbody")[0],
+        numberRange: document.getElementById("numberRange").getElementsByTagName("tbody")[0],
       },
       wrappers: {
         last10: document.getElementById("last10TableWrapper"),
         last20: document.getElementById("last20TableWrapper"),
+        numberRange: document.getElementById("numberRangeTableWrapper"),
       },
       titles: {
         last10: document.getElementById("last10Title"),
         last20: document.getElementById("last20Title"),
+        numberRange: document.getElementById("numberRangeTitle"),
         result: document.getElementById("resultTitle"),
       },
     },
@@ -230,9 +253,9 @@
   }
 
   // Helper to reset active button styles
-  function resetActiveButtons() {
-    state.elements.buttons.forEach(button => button.classList.remove("active-button"));
-  }
+	function resetActiveButtons() {
+	  state.elements.buttons.forEach(button => button.classList.remove("active-button"));
+	}
 
   // Helper to create table rows dynamically
   function createRow(cells, isHighlighted = false) {
@@ -337,6 +360,69 @@
     } catch (error) {
       console.error(error.message);
     }
+  }
+// Get most frequent numbers within a range
+  function getTopNumbersInRange(rangeNumbers, top = 3) {
+    const frequencyMap = {};
+    rangeNumbers.forEach(num => {
+      frequencyMap[num] = (frequencyMap[num] || 0) + 1;
+    });
+
+    const sortedNumbers = Object.entries(frequencyMap)
+      .sort((a, b) => b[1] - a[1] || rangeNumbers.lastIndexOf(b[0]) - rangeNumbers.lastIndexOf(a[0]))
+      .slice(0, top);
+
+    return sortedNumbers;
+  }
+
+  // Function to check number ranges
+  function checkNumberRange() {
+    resetVisibility();
+    resetActiveButtons();
+    document.getElementById("btnNumberRange").classList.add("active-button");
+
+    const ranges = [
+      { label: "01 to 09", min: 1, max: 9 },
+      { label: "10 to 19", min: 10, max: 19 },
+      { label: "20 to 29", min: 20, max: 29 },
+      { label: "30 to 39", min: 30, max: 39 },
+      { label: "40 to 49", min: 40, max: 49 },
+      { label: "50 to 59", min: 50, max: 59 },
+    ];
+
+    const tbody = state.elements.tables.numberRange;
+    tbody.innerHTML = ""; // Clear existing table rows
+
+    ranges.forEach(range => {
+      const rangeNumbers = Object.keys(state.lastNumberCounts)
+        .map(Number)
+        .filter(num => num >= range.min && num <= range.max);
+      const totalCount = rangeNumbers.reduce(
+        (sum, num) => sum + state.lastNumberCounts[num],
+        0
+      );
+
+      const topNumbers = getTopNumbersInRange(
+        rangeNumbers.sort((a, b) => a - b).flatMap(num => Array(state.lastNumberCounts[num]).fill(num))
+      );
+
+      const row = createRow([
+        range.label,
+        totalCount,
+        ...topNumbers.flatMap(([num, count]) => [num, count]),
+      ]);
+
+      while (row.children.length < 8) {
+        const emptyCell = document.createElement("td");
+        emptyCell.textContent = "-";
+        row.appendChild(emptyCell);
+      }
+
+      tbody.appendChild(row);
+    });
+
+    state.elements.wrappers.numberRange.classList.remove("hidden");
+    state.elements.titles.numberRange.classList.remove("hidden");
   }
 
   window.onload = () => analyzeZip("last10", "btnLast10");
