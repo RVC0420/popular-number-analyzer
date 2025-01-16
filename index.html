@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Popular Number Analyzer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; text-align: center; }
+    ul { text-align: left; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Popular Number Analyzer</h1>
+    <button onclick="analyzeZip()">Refresh Data</button>
+    <h2>Results</h2>
+    <ul id="results"></ul>
+  </div>
+
+  <script>
+    async function analyzeZip() {
+      const url = "https://cors-anywhere.herokuapp.com/https://www.sportstoto.com.my/upload/Toto658.zip";
+      const resultsElement = document.getElementById("results");
+      resultsElement.innerHTML = ""; // Clear previous results
+
+      try {
+        // Fetch the zip file
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("Failed to fetch the zip file.");
+        }
+
+        const blob = await response.blob();
+
+        // Use JSZip to extract the zip file
+        const zip = await JSZip.loadAsync(blob);
+        let txtFileContent = null;
+
+        // Find the first .txt file in the zip
+        for (const fileName of Object.keys(zip.files)) {
+          if (fileName.endsWith(".txt")) {
+            txtFileContent = await zip.files[fileName].async("string");
+            break;
+          }
+        }
+
+        if (!txtFileContent) {
+          throw new Error("No .txt file found in the zip.");
+        }
+
+        // Process the text file
+        const lines = txtFileContent.split("\n");
+        const numberCounts = {};
+
+        lines.forEach(line => {
+          const columns = line.split(",");
+          for (let i = 2; i <= 7; i++) { // Columns 3 to 8
+            const num = parseInt(columns[i], 10); // Ensure decimal base
+            if (!isNaN(num)) {
+              numberCounts[num] = (numberCounts[num] || 0) + 1;
+            }
+          }
+        });
+
+        // Sort and display the results
+        const sortedNumbers = Object.entries(numberCounts)
+          .sort((a, b) => b[1] - a[1]) // Sort by count descending
+          .slice(0, 10); // Top 10 results
+
+        sortedNumbers.forEach(([num, count]) => {
+          const listItem = document.createElement("li");
+          listItem.textContent = `Number: ${num}, Count: ${count}`;
+          resultsElement.appendChild(listItem);
+        });
+
+        alert("Analysis complete!");
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+
+    // Automatically refresh data on page load
+    window.onload = analyzeZip;
+  </script>
+</body>
+</html>
