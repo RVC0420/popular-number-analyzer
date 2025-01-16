@@ -61,6 +61,22 @@
       background-color: #cce5ff;
     }
 
+    .highlight-purple {
+      background-color: #e5ccff;
+    }
+
+    .highlight-pink {
+      background-color: #ffcce5;
+    }
+
+    .highlight-cyan {
+      background-color: #ccffff;
+    }
+
+    .highlight-lime {
+      background-color: #eaffcc;
+    }
+
     .active-button {
       background-color: #007bff;
       color: white;
@@ -274,7 +290,11 @@
           .sort((a, b) => b[1] - a[1])
           .slice(0, 15);
 
-        const highlightClasses = ["highlight-red", "highlight-orange", "highlight-yellow", "highlight-green", "highlight-blue"];
+        const highlightClasses = [
+          "highlight-red", "highlight-orange", "highlight-yellow",
+          "highlight-green", "highlight-blue", "highlight-purple",
+          "highlight-pink", "highlight-cyan", "highlight-lime"
+        ];
         const numberHighlights = {};
 
         sortedNumbers.forEach(([num, count], index) => {
@@ -283,7 +303,7 @@
           numberCell.textContent = num;
           countCell.textContent = count;
 
-          if (index < 5) {
+          if (index < 9) {
             const highlightClass = highlightClasses[index % highlightClasses.length];
             numberCell.classList.add(highlightClass);
             countCell.classList.add(highlightClass);
@@ -340,7 +360,11 @@
         .sort((a, b) => b[1] - a[1])
         .slice(0, count);
 
-      const highlightClasses = ["highlight-red", "highlight-orange", "highlight-yellow", "highlight-green", "highlight-blue"];
+      const highlightClasses = [
+        "highlight-red", "highlight-orange", "highlight-yellow",
+        "highlight-green", "highlight-blue", "highlight-purple",
+        "highlight-pink", "highlight-cyan", "highlight-lime"
+      ];
 
       sortedEstimates.forEach(([num, probability], index) => {
         const row = estimateTableBody.insertRow();
@@ -350,7 +374,7 @@
         numberCell.textContent = num;
         probabilityCell.textContent = probability;
 
-        if (index < 5) {
+        if (index < 9) {
           const highlightClass = highlightClasses[index % highlightClasses.length];
           numberCell.classList.add(highlightClass);
           probabilityCell.classList.add(highlightClass);
