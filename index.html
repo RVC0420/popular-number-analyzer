@@ -6,18 +6,88 @@
   <title>Popular Number Analyzer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background-color: #f4f4f4; }
-    .hidden { display: none; }
-    .highlight-red { background-color: #ffcccc; }
-    .highlight-orange { background-color: #ffe5cc; }
-    .highlight-yellow { background-color: #ffffcc; }
-    .highlight-green { background-color: #ccffcc; }
-    .highlight-blue { background-color: #cce5ff; }
-    .active-button { background-color: #007bff; color: white; border: none; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      word-wrap: break-word;
+    }
+
+    th {
+      background-color: #f4f4f4;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .highlight-red {
+      background-color: #ffcccc;
+    }
+
+    .highlight-orange {
+      background-color: #ffe5cc;
+    }
+
+    .highlight-yellow {
+      background-color: #ffffcc;
+    }
+
+    .highlight-green {
+      background-color: #ccffcc;
+    }
+
+    .highlight-blue {
+      background-color: #cce5ff;
+    }
+
+    .active-button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+    }
+
+    /* Responsive Table Container */
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 10px;
+    }
+
+    /* Media Query for Smaller Screens */
+    @media (max-width: 768px) {
+      body {
+        font-size: 14px;
+      }
+
+      th, td {
+        padding: 5px;
+      }
+
+      .container {
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -29,63 +99,74 @@
     <button id="btnEstimate10" onclick="estimateNumbers(10, 'btnEstimate10')">Estimate 10 Numbers</button>
     <button id="btnEstimate15" onclick="estimateNumbers(15, 'btnEstimate15')">Estimate 15 Numbers</button>
     <h2 id="resultTitle">Results</h2>
-    <table id="results">
-      <thead>
-        <tr>
-          <th>Label</th>
-          <th colspan="15">Top 15 Numbers</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr id="numberRow">
-          <td><b>Number</b></td>
-        </tr>
-        <tr id="countRow">
-          <td><b>Count</b></td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-wrapper">
+      <table id="results">
+        <thead>
+          <tr>
+            <th>Label</th>
+            <th colspan="15">Top 15 Numbers</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="numberRow">
+            <td><b>Number</b></td>
+          </tr>
+          <tr id="countRow">
+            <td><b>Count</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <h2 id="last20Title" class="hidden">Last 20 Rows Data</h2>
-    <table id="last20" class="hidden">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Num1</th>
-          <th>Num2</th>
-          <th>Num3</th>
-          <th>Num4</th>
-          <th>Num5</th>
-          <th>Num6</th>
-          <th>Prize</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="last20TableWrapper" class="table-wrapper hidden">
+      <table id="last20">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Num1</th>
+            <th>Num2</th>
+            <th>Num3</th>
+            <th>Num4</th>
+            <th>Num5</th>
+            <th>Num6</th>
+            <th>Prize</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
     <h2 id="last10Title" class="hidden">Last 10 Rows Data</h2>
-    <table id="last10" class="hidden">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Num1</th>
-          <th>Num2</th>
-          <th>Num3</th>
-          <th>Num4</th>
-          <th>Num5</th>
-          <th>Num6</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div id="last10TableWrapper" class="table-wrapper hidden">
+      <table id="last10">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Num1</th>
+            <th>Num2</th>
+            <th>Num3</th>
+            <th>Num4</th>
+            <th>Num5</th>
+            <th>Num6</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
     <h2 id="estimateTitle" class="hidden">Estimate Numbers for Next Round</h2>
-    <table id="estimateTable" class="hidden">
-      <thead>
-        <tr>
-          <th>Number</th>
-          <th>Probability (%)</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-wrapper hidden" id="estimateWrapper">
+      <table id="estimateTable">
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Probability (%)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
@@ -94,6 +175,23 @@
     function resetActiveButtons() {
       const buttons = document.querySelectorAll("button");
       buttons.forEach(button => button.classList.remove("active-button"));
+    }
+
+    function resetVisibility() {
+      const elementsToHide = [
+        document.getElementById("last20TableWrapper"),
+        document.getElementById("last10TableWrapper"),
+        document.getElementById("estimateWrapper"),
+        document.getElementById("last20Title"),
+        document.getElementById("last10Title"),
+        document.getElementById("estimateTitle")
+      ];
+
+      elementsToHide.forEach(element => {
+        if (element) {
+          element.classList.add("hidden");
+        }
+      });
     }
 
     async function analyzeZip(mode, buttonId) {
@@ -110,20 +208,12 @@
       const last20Title = document.getElementById("last20Title");
       const last10Title = document.getElementById("last10Title");
       const resultTitle = document.getElementById("resultTitle");
-      const estimateTitle = document.getElementById("estimateTitle");
-      const estimateTable = document.getElementById("estimateTable");
 
-      // Reset visibility and contents
+      resetVisibility();
       resultsTableNumberRow.innerHTML = "<td><b>Number</b></td>";
       resultsTableCountRow.innerHTML = "<td><b>Count</b></td>";
       last20TableBody.innerHTML = "";
       last10TableBody.innerHTML = "";
-      last20Table.classList.add("hidden");
-      last20Title.classList.add("hidden");
-      last10Table.classList.add("hidden");
-      last10Title.classList.add("hidden");
-      estimateTable.classList.add("hidden");
-      estimateTitle.classList.add("hidden");
 
       try {
         const response = await fetch(url);
@@ -146,34 +236,31 @@
         const numberCounts = {};
         let rowsToProcess = lines;
 
-        // Show appropriate table
         if (mode === "last10") {
           rowsToProcess = lines.slice(-10);
-          last10Table.classList.remove("hidden");
+          document.getElementById("last10TableWrapper").classList.remove("hidden");
           last10Title.classList.remove("hidden");
         } else if (mode === "last20") {
           rowsToProcess = lines.slice(-20);
-          last20Table.classList.remove("hidden");
+          document.getElementById("last20TableWrapper").classList.remove("hidden");
+          last20Title.textContent = "Last 20 Rows Data";
           last20Title.classList.remove("hidden");
         } else if (mode === "last30") {
           rowsToProcess = lines.slice(-30);
-          last20Table.classList.remove("hidden");
+          document.getElementById("last20TableWrapper").classList.remove("hidden");
           last20Title.textContent = "Last 30 Rows Data";
           last20Title.classList.remove("hidden");
         }
 
-        const lastRow = lines[lines.length - 1];
-        if (lastRow) {
-          const lastRowColumns = lastRow.split(",");
-          const date = lastRowColumns[1] || "N/A";
-          const lastColumn = lastRowColumns[lastRowColumns.length - 1] || "N/A";
-          resultTitle.textContent = `Results - Date: ${date}, RM ${parseInt(lastColumn).toLocaleString()}`;
-        }
+        const lastRow = lines[lines.length - 1].split(",");
+        const lastDate = lastRow[1] || "N/A";
+        const lastPrize = parseInt(lastRow[lastRow.length - 1]).toLocaleString() || "N/A";
+        resultTitle.textContent = `Results - Date: ${lastDate}, RM ${lastPrize}`;
 
         rowsToProcess.forEach(line => {
           const columns = line.split(",");
           for (let i = 2; i <= 7; i++) {
-            const num = columns[i];
+            const num = parseInt(columns[i], 10);
             if (!isNaN(num)) {
               numberCounts[num] = (numberCounts[num] || 0) + 1;
             }
@@ -217,7 +304,7 @@
           const num6 = columns[7] || "N/A";
           const prize = columns[columns.length - 1] || "N/A";
 
-          const row = (mode === "last10" ? last10TableBody : last20TableBody).insertRow();
+          const row = mode === "last10" ? last10TableBody.insertRow() : last20TableBody.insertRow();
           row.insertCell(0).textContent = date;
           [num1, num2, num3, num4, num5, num6].forEach((num, index) => {
             const cell = row.insertCell(index + 1);
@@ -239,19 +326,12 @@
       resetActiveButtons();
       document.getElementById(buttonId).classList.add("active-button");
 
-      const estimateTitle = document.getElementById("estimateTitle");
-      const estimateTable = document.getElementById("estimateTable");
-      const estimateTableBody = estimateTable.getElementsByTagName("tbody")[0];
-      const last20Table = document.getElementById("last20");
-      const last10Table = document.getElementById("last10");
-      const last20Title = document.getElementById("last20Title");
-      const last10Title = document.getElementById("last10Title");
+      resetVisibility();
 
+      const estimateTitle = document.getElementById("estimateTitle");
+      const estimateWrapper = document.getElementById("estimateWrapper");
+      const estimateTableBody = document.getElementById("estimateTable").getElementsByTagName("tbody")[0];
       estimateTableBody.innerHTML = "";
-      last20Table.classList.add("hidden");
-      last10Table.classList.add("hidden");
-      last20Title.classList.add("hidden");
-      last10Title.classList.add("hidden");
 
       const totalOccurrences = Object.values(lastNumberCounts).reduce((a, b) => a + b, 0);
 
@@ -264,24 +344,24 @@
 
       sortedEstimates.forEach(([num, probability], index) => {
         const row = estimateTableBody.insertRow();
-        const numCell = row.insertCell(0);
-        const probCell = row.insertCell(1);
+        const numberCell = row.insertCell(0);
+        const probabilityCell = row.insertCell(1);
 
-        numCell.textContent = num;
-        probCell.textContent = probability;
+        numberCell.textContent = num;
+        probabilityCell.textContent = probability;
 
         if (index < 5) {
           const highlightClass = highlightClasses[index % highlightClasses.length];
-          numCell.classList.add(highlightClass);
-          probCell.classList.add(highlightClass);
+          numberCell.classList.add(highlightClass);
+          probabilityCell.classList.add(highlightClass);
         }
       });
 
       estimateTitle.classList.remove("hidden");
-      estimateTable.classList.remove("hidden");
+      estimateWrapper.classList.remove("hidden");
     }
 
-    window.onload = () => analyzeZip("last20", "btnLast20");
+    window.onload = () => analyzeZip("last10", "btnLast10");
   </script>
 </body>
 </html>
