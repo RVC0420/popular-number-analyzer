@@ -309,8 +309,9 @@
           [num1, num2, num3, num4, num5, num6].forEach((num, index) => {
             const cell = row.insertCell(index + 1);
             cell.textContent = num;
-            if (numberHighlights[num]) {
-              cell.classList.add(numberHighlights[num]);
+            const normalizedNum = parseInt(num, 10).toString();
+            if (numberHighlights[normalizedNum]) {
+              cell.classList.add(numberHighlights[normalizedNum]);
             }
           });
           if (mode !== "last10") {
