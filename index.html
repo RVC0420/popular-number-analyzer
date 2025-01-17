@@ -256,7 +256,7 @@
 	function resetActiveButtons() {
 	  state.elements.buttons.forEach(button => button.classList.remove("active-button"));
 	}
-
+  
   // Helper to create table rows dynamically
   function createRow(cells, isHighlighted = false) {
     const row = document.createElement("tr");
@@ -361,7 +361,8 @@
       console.error(error.message);
     }
   }
-// Get most frequent numbers within a range
+
+  // Get most frequent numbers within a range
   function getTopNumbersInRange(rangeNumbers, top = 3) {
     const frequencyMap = {};
     rangeNumbers.forEach(num => {
@@ -426,6 +427,6 @@
   }
 
   window.onload = () => analyzeZip("last10", "btnLast10");
-</script>
+  </script>
 </body>
 </html>
