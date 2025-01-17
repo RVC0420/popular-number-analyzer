@@ -137,7 +137,7 @@
     <button id="btnLast100" class="active-button" onclick="analyzeZip('last100', 'btnLast100')">Analyze Last 100 Rows</button>
     <button id="btnNumberRange" class="active-button" onclick="checkNumberRange()">Check Number Range</button>
     <h2 id="resultTitle">Results</h2>
-    <div class="table-wrapper">
+    <div class="table-wrapper" id="top15TableWrapper">
       <table id="results">
         <thead>
           <tr>
@@ -227,6 +227,7 @@
         numberRange: document.getElementById("numberRange").getElementsByTagName("tbody")[0],
       },
       wrappers: {
+		top15Table: document.getElementById("top15TableWrapper"),
         last10: document.getElementById("last10TableWrapper"),
         last20: document.getElementById("last20TableWrapper"),
         numberRange: document.getElementById("numberRangeTableWrapper"),
@@ -317,7 +318,8 @@
   async function analyzeZip(mode, buttonId) {
     resetActiveButtons();
     document.getElementById(buttonId).classList.add("active-button");
-    resetVisibility();
+    resetVisibility();	
+	state.elements.wrappers.top15Table.classList.remove("hidden");
 
     try {
       const response = await fetch("https://cors-anywhere.herokuapp.com/https://www.sportstoto.com.my/upload/Toto658.zip");
@@ -381,6 +383,9 @@
     resetVisibility();
     resetActiveButtons();
     document.getElementById("btnNumberRange").classList.add("active-button");
+
+	// Hide Top 15 Numbers Table
+	state.elements.wrappers.top15Table.classList.add("hidden");
 
     const ranges = [
       { label: "01 to 09", min: 1, max: 9 },
