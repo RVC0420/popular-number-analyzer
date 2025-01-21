@@ -5,19 +5,116 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Popular Number Analyzer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.0"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
       margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
       box-sizing: border-box;
     }
 
     .container {
-      max-width: 100%;
+      max-width: 900px;
       margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
       text-align: center;
-      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .info-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      background-color: #f4f6f8;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .comment-box {
+      flex: 1;
+      padding: 10px;
+      margin-right: 20px;
+      background-color: #fefefe;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .comment-box h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .comment-box p {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .button-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .button-box button {
+      width: 100%;
+      padding: 10px 20px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .button-box button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .button-box button:active {
+      background-color: #003d80;
+      transform: scale(0.95);
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .info-box {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .comment-box {
+        margin-right: 0;
+        margin-bottom: 20px;
+      }
+
+      .button-box {
+        gap: 5px;
+      }
     }
 
     table {
@@ -105,6 +202,18 @@
 	  background-color: #ffeb3b; /* Yellow highlight */
 	  font-weight: bold;
 	}
+	
+	/* Hot and Cold Number Highlights */
+	.hot-number {
+	  background-color: rgba(255, 69, 0, 0.7); /* Red-orange for hot numbers */
+	  color: white;
+	}
+
+	.cold-number {
+	  background-color: rgba(70, 130, 180, 0.7); /* Steel blue for cold numbers */
+	  color: white;
+	}
+
 
     .active-button {
       background-color: #0056b3;
@@ -154,18 +263,125 @@
         padding: 8px 15px;
       }
     }
+	
+	.filter-box {
+	  background-color: #f4f6f8;
+	  border: 1px solid #ddd;
+	  border-radius: 8px;
+	  padding: 20px;
+	  margin-bottom: 20px;
+	  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
+	.filter-box h3 {
+	  margin: 0 0 10px;
+	  font-size: 18px;
+	  color: #333;
+	}
+
+	.filter-box label {
+	  display: block;
+	  margin-bottom: 5px;
+	  font-size: 14px;
+	  color: #555;
+	}
+
+	.filter-box select, .filter-box input {
+	  width: 100%;
+	  padding: 8px;
+	  margin-bottom: 10px;
+	  border: 1px solid #ccc;
+	  border-radius: 4px;
+	}
+
+	.filter-box button {
+	  width: 100%;
+	}
+	
+	 .button-container {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .button-container button {
+    width: 48%;
+    padding: 10px;
+    font-size: 14px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .button-container button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+  }
+
+  .button-container button:active {
+    background-color: #003d80;
+    transform: scale(0.95);
+  }
+
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Popular Number Analyzer</h1>
-    <button id="btnLast10" class="active-button" onclick="analyzeZip('last10', 'btnLast10')">Analyze Lastest 10 Results</button>
-    <button id="btnLast20" class="active-button" onclick="analyzeZip('last20', 'btnLast20')">Analyze Lastest 20 Results</button>
-    <button id="btnLast30" class="active-button" onclick="analyzeZip('last30', 'btnLast30')">Analyze Lastest 30 Results</button>
-    <button id="btnLast50" class="active-button" onclick="analyzeZip('last50', 'btnLast50')">Analyze Lastest 50 Results</button>
-    <button id="btnLast100" class="active-button" onclick="analyzeZip('last100', 'btnLast100')">Analyze Lastest 100 Results</button>
-    <button id="btnLastALL" class="active-button" onclick="analyzeZip('ALL', 'btnLastALL')">Analyze ALL Results</button>
-    <h2 id="resultTitle">Results</h2>
+    <div class="header">
+      <h1>Popular Number Analyzer</h1>
+    </div>
+
+    <div class="info-box">
+      <!-- Comment/Info Section -->
+      <div class="comment-box">
+        <h2>Instructions</h2>
+        <p>
+          Please choose the dataset to analyze. The results displayed below will
+          be based on the chosen dataset. Ensure you select the appropriate range
+          for meaningful insights.
+        </p>
+        <p>
+          Note: Larger datasets may take more time to process and display results.
+        </p>
+      </div>
+
+      <!-- Button Section -->
+      <div class="button-box">
+        <button id="btnLast10" onclick="analyzeZip('last10', 'btnLast10')">Analyze Latest 10 Results</button>
+        <button id="btnLast20" onclick="analyzeZip('last20', 'btnLast20')">Analyze Latest 20 Results</button>
+        <button id="btnLast30" onclick="analyzeZip('last30', 'btnLast30')">Analyze Latest 30 Results</button>
+        <button id="btnLast50" onclick="analyzeZip('last50', 'btnLast50')">Analyze Latest 50 Results</button>
+        <button id="btnLast100" onclick="analyzeZip('last100', 'btnLast100')">Analyze Latest 100 Results</button>
+        <button id="btnLastALL" onclick="analyzeZip('ALL', 'btnLastALL')">Analyze ALL Results</button>
+      </div>
+    </div>
+	
+	<div class="filter-box">
+	  <h3>Filters</h3>
+	  <label for="rangeFilter">Select Number Range:</label>
+	  <select id="rangeFilter">
+		<option value="all">All Numbers</option>
+		<option value="1-9">01 to 09</option>
+		<option value="10-19">10 to 19</option>
+		<option value="20-29">20 to 29</option>
+		<option value="30-39">30 to 39</option>
+		<option value="40-49">40 to 49</option>
+		<option value="50-59">50 to 59</option>
+	  </select>
+
+	  <label for="frequencyFilter">Minimum Frequency:</label>
+	  <input type="number" id="frequencyFilter" min="1" placeholder="e.g., 5" />
+
+	  <div class="button-container">
+		<button id="applyFilters" class="active-button">Apply Filters</button>
+		<button id="resetFilters" class="active-button">Reset Filters</button>
+	  </div>						
+	</div>
+
+	
+    <h2 id="resultTitle">Top 15 number</h2>
     <div class="table-wrapper" id="top15TableWrapper">
       <table id="results">
         <thead>
@@ -203,6 +419,15 @@
         <tbody></tbody>
       </table>
     </div>
+	
+	<div class="chart-tabs">
+	  <button onclick="toggleChart('frequencyChart')">Bar Chart</button>
+	</div>
+
+	<div class="container">	  
+	  <h2>Number Frequency Distribution</h2>
+	  <canvas id="frequencyChart"></canvas>
+	</div>
 
     <h2 id="last20Title" class="hidden"></h2>
     <div id="last20TableWrapper" class="table-wrapper hidden">
@@ -222,29 +447,9 @@
         <tbody></tbody>
       </table>
     </div>
-
-    <h2 id="last10Title" class="hidden"></h2>
-    <div id="last10TableWrapper" class="table-wrapper hidden">
-      <table id="last10">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Num1</th>
-            <th>Num2</th>
-            <th>Num3</th>
-            <th>Num4</th>
-            <th>Num5</th>
-            <th>Num6</th>
-            <th>Prize</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
   </div>
 
   <script>
-  // Centralized references and state
   const state = {
     lastNumberCounts: {},
     elements: {
@@ -252,18 +457,13 @@
       tables: {
         results: document.getElementById("results"),
         last20: document.getElementById("last20").getElementsByTagName("tbody")[0],
-        last10: document.getElementById("last10").getElementsByTagName("tbody")[0],
         numberRange: document.getElementById("numberRange").getElementsByTagName("tbody")[0],
       },
       wrappers: {
-        last10: document.getElementById("last10TableWrapper"),
         last20: document.getElementById("last20TableWrapper"),
       },
       titles: {
-        last10: document.getElementById("last10Title"),
         last20: document.getElementById("last20Title"),
-        numberRange: document.getElementById("numberRangeTitle"),
-        result: document.getElementById("resultTitle"),
       },
     },
   };
@@ -395,7 +595,14 @@ const highlightClasses = [
         });
       });
 
-      state.lastNumberCounts = numberCounts;
+      state.lastNumberCounts = numberCounts;	  
+	  
+	  // Render the frequency chart
+      renderFrequencyChart(numberCounts);
+
+	  // Apply hot and cold number highlights
+	  applyHotAndColdHighlights(numberCounts);
+	  
       const sortedNumbers = Object.entries(numberCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
       const numberHighlights = highlightNumbers(sortedNumbers);
 
@@ -406,9 +613,9 @@ const highlightClasses = [
       resultsBody.appendChild(createRow(["Count", ...sortedNumbers.map(([, count]) => count)], true));
 
       // Update Last Rows Table
-      const targetTable = mode === "last10" ? state.elements.tables.last10 : state.elements.tables.last20;
-      const targetWrapper = mode === "last10" ? state.elements.wrappers.last10 : state.elements.wrappers.last20;
-      const targetTitle = mode === "last10" ? state.elements.titles.last10 : state.elements.titles.last20;
+      const targetTable = state.elements.tables.last20;
+      const targetWrapper = state.elements.wrappers.last20;
+      const targetTitle = state.elements.titles.last20;
       processRows(rowsToProcess, targetTable, numberHighlights);
       targetWrapper.classList.remove("hidden");
       targetTitle.classList.remove("hidden");
@@ -418,7 +625,40 @@ const highlightClasses = [
 	
 	checkNumberRange();
   }
+  
+function renderFrequencyChart(numberCounts) {
+  const ctx = document.getElementById('frequencyChart').getContext('2d');
 
+  if (window.frequencyChart instanceof Chart) {
+    window.frequencyChart.destroy();
+  }
+
+  window.frequencyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(numberCounts),
+      datasets: [{
+        label: 'Frequency',
+        data: Object.values(numberCounts),
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Numbers' } },
+        y: { beginAtZero: true, title: { display: true, text: 'Frequency' } }
+      }
+    }
+  });
+}
+
+  
   // Get most frequent numbers within a range
   function getTopNumbersInRange(rangeNumbers, top = 3) {
     const frequencyMap = {};
@@ -433,8 +673,7 @@ const highlightClasses = [
     return sortedNumbers;
   }
 
-  // Function to check number ranges
-
+// Function to check number ranges
 function checkNumberRange() {
   const ranges = [
     { label: "01 to 09", min: 1, max: 9 },
@@ -506,9 +745,97 @@ function checkNumberRange() {
 }
 
 
+function applyHotAndColdHighlights(numberCounts) {
+  // Convert numberCounts to an array and sort by frequency
+  const sortedNumbers = Object.entries(numberCounts).sort(([, countA], [, countB]) => countB - countA);
 
+  // Determine thresholds for hot and cold numbers
+  const totalNumbers = sortedNumbers.length;
+  const hotThresholdIndex = Math.ceil(totalNumbers * 0.2); // Top 20%
+  const coldThresholdIndex = Math.floor(totalNumbers * 0.8); // Bottom 20%
 
-  window.onload = () => analyzeZip("last10", "btnLast10");
+  const hotNumbers = sortedNumbers.slice(0, hotThresholdIndex).map(([num]) => num);
+  const coldNumbers = sortedNumbers.slice(coldThresholdIndex).map(([num]) => num);
+
+  // Apply highlights in the results table
+  const numberRow = document.getElementById("numberRow");
+  const countRow = document.getElementById("countRow");
+
+  for (let i = 1; i < numberRow.children.length; i++) {
+    const numberCell = numberRow.children[i];
+    const countCell = countRow.children[i];
+    const number = numberCell.textContent;
+
+    if (hotNumbers.includes(number)) {
+      numberCell.classList.add("hot-number");
+      countCell.classList.add("hot-number");
+    } else if (coldNumbers.includes(number)) {
+      numberCell.classList.add("cold-number");
+      countCell.classList.add("cold-number");
+    }
+  }
+}
+
+	document.getElementById("applyFilters").addEventListener("click", () => {
+	  const rangeFilter = document.getElementById("rangeFilter").value;
+	  const frequencyFilter = parseInt(document.getElementById("frequencyFilter").value, 10) || 0;
+
+	  // Get current numberCounts from state
+	  const numberCounts = state.lastNumberCounts;
+
+	  // Apply range filter
+	  const filteredNumbers = Object.entries(numberCounts).filter(([number, count]) => {
+		const num = parseInt(number, 10);
+
+		// Check range
+		if (rangeFilter !== "all") {
+		  const [min, max] = rangeFilter.split("-").map(Number);
+		  if (num < min || num > max) return false;
+		}
+
+		// Check frequency
+		if (count < frequencyFilter) return false;
+
+		return true;
+	  });
+
+  // Convert filtered numbers back to object
+  const filteredCounts = Object.fromEntries(filteredNumbers);
+
+  // Update the UI
+  renderFrequencyChart(filteredCounts); // Update the chart
+  updateResultsTable(filteredCounts); // Update the top 15 table
+	});
+
+	// Update the Top 15 Results Table
+	function updateResultsTable(filteredCounts) {
+	  const resultsBody = state.elements.tables.results.tBodies[0];
+	  resultsBody.innerHTML = ""; // Clear existing rows
+
+	  // Get sorted numbers and counts
+	  const sortedNumbers = Object.entries(filteredCounts)
+		.sort((a, b) => b[1] - a[1])
+		.slice(0, 15);
+
+	  // Update rows
+	  resultsBody.appendChild(createRow(["Number", ...sortedNumbers.map(([num]) => num)], true));
+	  resultsBody.appendChild(createRow(["Count", ...sortedNumbers.map(([, count]) => count)], true));
+	}
+
+	function resetFilters() {
+	  renderFrequencyChart(state.lastNumberCounts);
+	  updateResultsTable(state.lastNumberCounts);
+	}
+		
+	document.getElementById("resetFilters").addEventListener("click", resetFilters);
+ 
+	window.onload = function () {
+      try {
+		analyzeZip("last10", "btnLast10");
+      } catch (error) {
+        console.error("Error initializing heatmap chart:", error);
+      }
+    };
   </script>
 </body>
 </html>
