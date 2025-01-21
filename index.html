@@ -41,41 +41,70 @@
       display: none;
     }
 
-    .highlight-red {
-      background-color: #ffcccc;
-    }
+	.highlight-red {
+	  background-color: #ff9999;
+	}
 
-    .highlight-orange {
-      background-color: #ffe5cc;
-    }
+	.highlight-orange {
+	  background-color: #ffcc99;
+	}
 
-    .highlight-yellow {
-      background-color: #ffffcc;
-    }
+	.highlight-yellow {
+	  background-color: #ffffcc;
+	}
 
-    .highlight-green {
-      background-color: #ccffcc;
-    }
+	.highlight-green {
+	  background-color: #ccffcc;
+	}
 
-    .highlight-blue {
-      background-color: #cce5ff;
-    }
+	.highlight-blue {
+	  background-color: #cce5ff;
+	}
 
-    .highlight-purple {
-      background-color: #e5ccff;
-    }
+	.highlight-purple {
+	  background-color: #e5ccff;
+	}
 
-    .highlight-pink {
-      background-color: #ffcce5;
-    }
+	.highlight-pink {
+	  background-color: #ffcce5;
+	}
 
-    .highlight-cyan {
-      background-color: #ccffff;
-    }
+	.highlight-cyan {
+	  background-color: #ccffff;
+	}
 
-    .highlight-lime {
-      background-color: #eaffcc;
-    }
+	.highlight-lime {
+	  background-color: #eaffcc;
+	}
+
+	.highlight-lightbrown {
+	  background-color: #e6ccb3;
+	}
+
+	.highlight-lightgray {
+	  background-color: #f2f2f2;
+	}
+
+	.highlight-lightteal {
+	  background-color: #ccffff;
+	}
+
+	.highlight-lightmagenta {
+	  background-color: #ffccff;
+	}
+
+	.highlight-lightgold {
+	  background-color: #fff9cc;
+	}
+
+	.highlight-lightsilver {
+	  background-color: #f9f9f9;
+	}
+
+	.highlight-max-prize {
+	  background-color: #ffeb3b; /* Yellow highlight */
+	  font-weight: bold;
+	}
 
     .active-button {
       background-color: #0056b3;
@@ -130,11 +159,12 @@
 <body>
   <div class="container">
     <h1>Popular Number Analyzer</h1>
-    <button id="btnLast10" class="active-button" onclick="analyzeZip('last10', 'btnLast10')">Analyze Lastest 10 Rows</button>
-    <button id="btnLast20" class="active-button" onclick="analyzeZip('last20', 'btnLast20')">Analyze Lastest 20 Rows</button>
-    <button id="btnLast30" class="active-button" onclick="analyzeZip('last30', 'btnLast30')">Analyze Lastest 30 Rows</button>
-    <button id="btnLast50" class="active-button" onclick="analyzeZip('last50', 'btnLast50')">Analyze Lastest 50 Rows</button>
-    <button id="btnLast100" class="active-button" onclick="analyzeZip('last100', 'btnLast100')">Analyze Lastest 100 Rows</button>
+    <button id="btnLast10" class="active-button" onclick="analyzeZip('last10', 'btnLast10')">Analyze Lastest 10 Results</button>
+    <button id="btnLast20" class="active-button" onclick="analyzeZip('last20', 'btnLast20')">Analyze Lastest 20 Results</button>
+    <button id="btnLast30" class="active-button" onclick="analyzeZip('last30', 'btnLast30')">Analyze Lastest 30 Results</button>
+    <button id="btnLast50" class="active-button" onclick="analyzeZip('last50', 'btnLast50')">Analyze Lastest 50 Results</button>
+    <button id="btnLast100" class="active-button" onclick="analyzeZip('last100', 'btnLast100')">Analyze Lastest 100 Results</button>
+    <button id="btnLastALL" class="active-button" onclick="analyzeZip('ALL', 'btnLastALL')">Analyze ALL Results</button>
     <h2 id="resultTitle">Results</h2>
     <div class="table-wrapper" id="top15TableWrapper">
       <table id="results">
@@ -238,11 +268,13 @@
     },
   };
 
-  const highlightClasses = [
-    "highlight-red", "highlight-orange", "highlight-yellow",
-    "highlight-green", "highlight-blue", "highlight-purple",
-    "highlight-pink", "highlight-cyan", "highlight-lime"
-  ];
+const highlightClasses = [
+  "highlight-red", "highlight-orange", "highlight-yellow",
+  "highlight-green", "highlight-blue", "highlight-purple",
+  "highlight-pink", "highlight-cyan", "highlight-lime",
+  "highlight-lightbrown", "highlight-lightgray", "highlight-lightteal",
+  "highlight-lightmagenta", "highlight-lightgold", "highlight-lightsilver"
+];
 
   // Helper to reset UI visibility
   function resetVisibility() {
@@ -272,44 +304,68 @@
     return row;
   }
 
-  // Highlight numbers with specific classes
-  function highlightNumbers(numbers) {
-    const uniqueColors = new Map();
-    let colorIndex = 0;
+	// Highlight numbers with specific classes for the top 15
+	function highlightNumbers(numbers) {
+	  const uniqueColors = new Map();
+	  let colorIndex = 0;
 
-    numbers.slice(0, 9).forEach(([num]) => { // Restrict to top 9 numbers
-      if (!uniqueColors.has(num)) {
-        uniqueColors.set(num, highlightClasses[colorIndex % highlightClasses.length]);
-        colorIndex++;
-      }
-    });
+	  numbers.slice(0, 15).forEach(([num]) => { // Restrict to top 15 numbers
+		if (!uniqueColors.has(num)) {
+		  uniqueColors.set(num, highlightClasses[colorIndex % highlightClasses.length]);
+		  colorIndex++;
+		}
+	  });
 
-    return uniqueColors;
-  }
+	  return uniqueColors;
+	}
 
-  // Process rows for number counting and table insertion
-  function processRows(rows, tableBody, numberHighlights) {
-    tableBody.innerHTML = ""; // Clear existing table rows
+	function processRows(rows, tableBody, numberHighlights) {
+	  tableBody.innerHTML = ""; // Clear existing table rows
 
-    rows.forEach(line => {
-      const columns = line.split(",");
-      const date = columns[1] || "N/A";
-      const numbers = columns.slice(2, 8).map(num => num || "N/A");
-      const prize = parseInt(columns.at(-1)).toLocaleString() || "N/A";
+	  // Sort rows by date in descending order
+	  const sortedRows = rows.sort((a, b) => {
+		const aDate = a.split(",")[1]; // Extract the date from the row (2nd column)
+		const bDate = b.split(",")[1];
+		return bDate.localeCompare(aDate); // Compare as strings in descending order
+	  });
 
-      // Create and populate row
-      const row = createRow([date, ...numbers, prize]);
-      numbers.forEach((num, i) => {
-        const normalizedNum = parseInt(num, 10).toString();
-        if (numberHighlights.has(normalizedNum)) {
-          row.cells[i + 1].classList.add(numberHighlights.get(normalizedNum));
-        }
-      });
+	  // Determine the highest prize
+	  let maxPrize = 0;
+	  sortedRows.forEach(line => {
+		const prize = parseInt(line.split(",").at(-1).replace(/,/g, ""), 10) || 0;
+		if (prize > maxPrize) {
+		  maxPrize = prize;
+		}
+	  });
 
-      // Append row to the table body
-      tableBody.appendChild(row);
-    });
-  }
+	  // Process sorted rows and highlight the highest prize
+	  sortedRows.forEach(line => {
+		const columns = line.split(",");
+		const date = columns[1] || "N/A";
+		const numbers = columns.slice(2, 8).map(num => num || "N/A");
+		const prize = parseInt(columns.at(-1)).toLocaleString() || "N/A";
+
+		// Create and populate row
+		const row = createRow([date, ...numbers, prize]);
+		numbers.forEach((num, i) => {
+		  const normalizedNum = parseInt(num, 10).toString();
+		  if (numberHighlights.has(normalizedNum)) {
+			row.cells[i + 1].classList.add(numberHighlights.get(normalizedNum));
+		  }
+		});
+
+		// Highlight the cell with the highest prize
+		const prizeCell = row.cells[row.cells.length - 1];
+		if (parseInt(prizeCell.textContent.replace(/,/g, ""), 10) === maxPrize) {
+		  prizeCell.classList.add("highlight-max-prize");
+		}
+
+		// Append row to the table body
+		tableBody.appendChild(row);
+	  });
+	}
+
+
 
   // Fetch and analyze zip content
   async function analyzeZip(mode, buttonId) {
@@ -327,7 +383,7 @@
 
       const lines = (await txtFile.async("string")).split("\n").filter(line => line.trim() !== "");
       const rowsToProcess = lines.slice(-{
-        last10: 10, last20: 20, last30: 30, last50: 50, last100: 100,
+        last10: 10, last20: 20, last30: 30, last50: 50, last100: 100,ALL: lines.length,
       }[mode] || lines.length);
 
       const numberCounts = {};
@@ -447,7 +503,6 @@ function checkNumberRange() {
     tbody.appendChild(row);
   });
 }
-
 
 
 
