@@ -565,49 +565,61 @@ const highlightClasses = [
 
   // Fetch and analyze zip content
 async function analyzeZip(mode, buttonId) {
-    resetActiveButtons();
-    document.getElementById(buttonId).classList.add("active-button");
-    resetVisibility();
+  resetActiveButtons();
+  document.getElementById(buttonId).classList.add("active-button");
+  resetVisibility();
 
-    try {
-        const response = await fetch("https://rvc0420.github.io/popular-number-analyzer/Toto658.zip");
-        if (!response.ok) throw new Error("Failed to fetch the zip file.");
+  try {
+    const response = await fetch("https://rvc0420.github.io/popular-number-analyzer/Toto658.zip");
+    if (!response.ok) throw new Error("Failed to fetch the zip file.");
 
-        const zip = await JSZip.loadAsync(await response.blob());
-        const txtFile = Object.values(zip.files).find(file => file.name.endsWith(".txt"));
-        if (!txtFile) throw new Error("No .txt file found in the zip.");
+    const zip = await JSZip.loadAsync(await response.blob());
+    const txtFile = Object.values(zip.files).find(file => file.name.endsWith(".txt"));
+    if (!txtFile) throw new Error("No .txt file found in the zip.");
 
-        const lines = (await txtFile.async("string")).split("\n").filter(line => line.trim() !== "");
-        const rowsToProcess = lines.slice(-(
-            { last10: 10, last20: 20, last30: 30, last50: 50, last100: 100, ALL: lines.length }[mode]
-            || lines.length
-        ));
+    const lines = (await txtFile.async("string")).split("\n").filter(line => line.trim() !== "");
+    const rowsToProcess = lines.slice(-(
+      { last10: 10, last20: 20, last30: 30, last50: 50, last100: 100, ALL: lines.length }[mode]
+      || lines.length
+    ));
 
-        console.log("Rows to process:", rowsToProcess);
+    console.log("Rows to process for last20 table:", rowsToProcess);
 
-        const numberCounts = {};
-        rowsToProcess.forEach(line => {
-            line.split(",").slice(2, 8).forEach(num => {
-                const parsedNum = parseInt(num, 10);
-                if (!isNaN(parsedNum)) numberCounts[parsedNum] = (numberCounts[parsedNum] || 0) + 1;
-            });
-        });
+    const numberCounts = {};
+    rowsToProcess.forEach(line => {
+      line.split(",").slice(2, 8).forEach(num => {
+        const parsedNum = parseInt(num, 10);
+        if (!isNaN(parsedNum)) numberCounts[parsedNum] = (numberCounts[parsedNum] || 0) + 1;
+      });
+    });
 
-        console.log("Number counts:", numberCounts);
+    state.lastNumberCounts = numberCounts;
 
-        state.lastNumberCounts = numberCounts;
+    // Update Results Table
+    updateResultsTable(numberCounts);
 
-        // Update UI
-        updateResultsTable(numberCounts);
-        renderFrequencyChart(numberCounts);		
-		
-        // Update Number Range Analysis
-        checkNumberRange();
+    // Render Frequency Chart
+    renderFrequencyChart(numberCounts);
+	
+	// Update Number Range Analysis
+    checkNumberRange();
 
-    } catch (error) {
-        console.error(error.message);
-    }
+    // Update Last20 Table
+    const targetTable = state.elements.tables.last20;
+    const targetWrapper = state.elements.wrappers.last20;
+    const targetTitle = state.elements.titles.last20;
+
+    processRows(rowsToProcess, targetTable, new Map());
+    targetWrapper.classList.remove("hidden");
+    targetTitle.classList.remove("hidden");
+
+    console.log("Updated last20 table successfully.");
+  } catch (error) {
+    console.error(error.message);
+  }
 }
+
+
 
 function renderFrequencyChart(numberCounts) {
   const ctx = document.getElementById('frequencyChart').getContext('2d');
