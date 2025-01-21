@@ -564,64 +564,51 @@ const highlightClasses = [
 
 
   // Fetch and analyze zip content
-  async function analyzeZip(mode, buttonId) {
+async function analyzeZip(mode, buttonId) {
     resetActiveButtons();
     document.getElementById(buttonId).classList.add("active-button");
-    resetVisibility();	
+    resetVisibility();
 
     try {
-      //const response = await fetch("https://cors-anywhere.herokuapp.com/https://www.sportstoto.com.my/upload/Toto658.zip");
-	  const response = await fetch("https://rvc0420.github.io/popular-number-analyzer/Toto658.zip");
-      if (!response.ok) throw new Error("Failed to fetch the zip file.");
+        const response = await fetch("https://rvc0420.github.io/popular-number-analyzer/Toto658.zip");
+        if (!response.ok) throw new Error("Failed to fetch the zip file.");
 
-      const zip = await JSZip.loadAsync(await response.blob());
-      const txtFile = Object.values(zip.files).find(file => file.name.endsWith(".txt"));
-      if (!txtFile) throw new Error("No .txt file found in the zip.");
+        const zip = await JSZip.loadAsync(await response.blob());
+        const txtFile = Object.values(zip.files).find(file => file.name.endsWith(".txt"));
+        if (!txtFile) throw new Error("No .txt file found in the zip.");
 
-      const lines = (await txtFile.async("string")).split("\n").filter(line => line.trim() !== "");
-      const rowsToProcess = lines.slice(-{
-        last10: 10, last20: 20, last30: 30, last50: 50, last100: 100,ALL: lines.length,
-      }[mode] || lines.length);
+        const lines = (await txtFile.async("string")).split("\n").filter(line => line.trim() !== "");
+        const rowsToProcess = lines.slice(-(
+            { last10: 10, last20: 20, last30: 30, last50: 50, last100: 100, ALL: lines.length }[mode]
+            || lines.length
+        ));
 
-      const numberCounts = {};
-      rowsToProcess.forEach(line => {
-        line.split(",").slice(2, 8).forEach(num => {
-          const parsedNum = parseInt(num, 10);
-          if (!isNaN(parsedNum)) numberCounts[parsedNum] = (numberCounts[parsedNum] || 0) + 1;
+        console.log("Rows to process:", rowsToProcess);
+
+        const numberCounts = {};
+        rowsToProcess.forEach(line => {
+            line.split(",").slice(2, 8).forEach(num => {
+                const parsedNum = parseInt(num, 10);
+                if (!isNaN(parsedNum)) numberCounts[parsedNum] = (numberCounts[parsedNum] || 0) + 1;
+            });
         });
-      });
 
-      state.lastNumberCounts = numberCounts;	  
-	  
-	  // Render the frequency chart
-      renderFrequencyChart(numberCounts);
+        console.log("Number counts:", numberCounts);
 
-	  // Apply hot and cold number highlights
-	  applyHotAndColdHighlights(numberCounts);
-	  
-      const sortedNumbers = Object.entries(numberCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
-      const numberHighlights = highlightNumbers(sortedNumbers);
+        state.lastNumberCounts = numberCounts;
 
-      // Update Results Table
-      const resultsBody = state.elements.tables.results.tBodies[0];
-      resultsBody.innerHTML = "";
-      resultsBody.appendChild(createRow(["Number", ...sortedNumbers.map(([num]) => num)], true));
-      resultsBody.appendChild(createRow(["Count", ...sortedNumbers.map(([, count]) => count)], true));
+        // Update UI
+        updateResultsTable(numberCounts);
+        renderFrequencyChart(numberCounts);		
+		
+        // Update Number Range Analysis
+        checkNumberRange();
 
-      // Update Last Rows Table
-      const targetTable = state.elements.tables.last20;
-      const targetWrapper = state.elements.wrappers.last20;
-      const targetTitle = state.elements.titles.last20;
-      processRows(rowsToProcess, targetTable, numberHighlights);
-      targetWrapper.classList.remove("hidden");
-      targetTitle.classList.remove("hidden");
     } catch (error) {
-      console.error(error.message);
+        console.error(error.message);
     }
-	
-	checkNumberRange();
-  }
-  
+}
+
 function renderFrequencyChart(numberCounts) {
   const ctx = document.getElementById('frequencyChart').getContext('2d');
 
@@ -683,14 +670,17 @@ function checkNumberRange() {
   const tbody = state.elements.tables.numberRange;
   tbody.innerHTML = ""; // Clear existing table rows
 
-  // Reuse the numberHighlights from Top 15 Numbers table
+  // Ensure state.lastNumberCounts is populated
+  if (Object.keys(state.lastNumberCounts).length === 0) {
+    console.warn("No data available for number range analysis.");
+    return;
+  }
+
   const sortedNumbers = Object.entries(state.lastNumberCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 15);
 
   const numberHighlights = highlightNumbers(sortedNumbers);
-
-  console.log("Number Highlights Map:", numberHighlights);
 
   ranges.forEach((range) => {
     const rangeNumbers = Object.keys(state.lastNumberCounts)
@@ -714,18 +704,14 @@ function checkNumberRange() {
       ...topNumbers.flatMap(([num, count]) => [num, count]),
     ]);
 
-    // Apply highlight colors from Top 15 Numbers table
+    // Apply highlight colors
     [2, 4, 6].forEach((index) => {
       const cell = row.children[index];
       if (cell) {
         const num = cell.textContent.trim(); // Keep the number as a string
-        console.log(`Checking cell value: ${num}`);
         if (numberHighlights.has(num)) {
           const highlightClass = numberHighlights.get(num);
-          console.log(`Applying highlight ${highlightClass} to number ${num}`);
           cell.classList.add(highlightClass);
-        } else {
-          console.log(`No highlight found for number: ${num}`);
         }
       }
     });
@@ -739,6 +725,7 @@ function checkNumberRange() {
     tbody.appendChild(row);
   });
 }
+
 
 
 function applyHotAndColdHighlights(numberCounts) {
@@ -807,6 +794,7 @@ function applyHotAndColdHighlights(numberCounts) {
 	function updateResultsTable(filteredCounts) {
 	  const resultsBody = state.elements.tables.results.tBodies[0];
 	  resultsBody.innerHTML = ""; // Clear existing rows
+    console.log("Updating table with counts:", filteredCounts);
 
 	  // Get sorted numbers and counts
 	  const sortedNumbers = Object.entries(filteredCounts)
